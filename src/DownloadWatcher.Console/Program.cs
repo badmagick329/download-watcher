@@ -40,18 +40,23 @@ Arguments:
         watcher.Renamed += (source, e) => OnChange(source, e, app);
         watcher.EnableRaisingEvents = true;
         Console.WriteLine("Press q to quit");
-        Console.WriteLine($"Watching {downloadDir}");
+        Console.WriteLine($"[{NowString()}] Watching {downloadDir}");
         while (Console.Read() != 'q') ;
 
     }
     static void OnCreate(object source, FileSystemEventArgs e, Application app)
     {
-        Console.WriteLine($"File: {e.FullPath} {e.ChangeType}");
+        Console.WriteLine($"[{NowString()}] File: {e.FullPath} {e.ChangeType}");
         app.Process(e.FullPath);
     }
     static void OnChange(object source, FileSystemEventArgs e, Application app)
     {
-        Console.WriteLine($"File: {e.FullPath} {e.ChangeType}");
+        Console.WriteLine($"[{NowString()}] File: {e.FullPath} {e.ChangeType}");
         app.Process(e.FullPath);
+    }
+
+    static string NowString()
+    {
+        return DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
     }
 }
