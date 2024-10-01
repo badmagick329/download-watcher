@@ -21,4 +21,6 @@ public partial class FileRule
     [GeneratedRegex(@"^@""([^""]+)""\s+(.+)")]
     private static partial Regex RegexAndPathPattern();
 
+    public override string ToString() => $"{RegexPattern} {TargetPath}";
+
 }

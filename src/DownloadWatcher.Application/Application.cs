@@ -3,9 +3,12 @@ namespace DownloadWatcher.Application;
 public class Application
 {
     public FileRelocation Relocation { get; }
-    public Application()
+    public Application(List<string> rulesText)
     {
-        Relocation = new([@"@""^.*\.(mp4|avi|webm|mkv|ts)$"" E:\temp"]);
+        Console.WriteLine($"RulesText: {string.Join(Environment.NewLine, rulesText)}");
+        Relocation = new(rulesText);
+
+        Console.WriteLine($"Rules: {string.Join(Environment.NewLine, Relocation.FileRules)}");
     }
 
     public void Process(string path)
