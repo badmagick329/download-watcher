@@ -11,11 +11,15 @@ public class FileRelocation
             .ToList();
     }
 
-    public string? NewLocation(string path)
+    public string? NewName(string path)
     {
         EnsureValidPath(path);
         FileRule? fileRule = MatchingRule(path);
-        return fileRule?.TargetPath;
+        if (fileRule == null)
+        {
+            return null;
+        }
+        return Path.Combine(fileRule.TargetPath, Path.GetFileName(path));
     }
 
     private static void EnsureValidPath(string path)
