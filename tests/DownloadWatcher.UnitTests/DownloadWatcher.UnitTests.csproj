@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DownloadWatcher.Core\DownloadWatcher.Core.csproj" />
+    <ProjectReference Include="..\..\src\DownloadWatcher.Core\DownloadWatcher.Core.csproj" />
   </ItemGroup>
 
 </Project>
