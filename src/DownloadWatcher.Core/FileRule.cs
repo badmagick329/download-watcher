@@ -15,6 +15,7 @@ public partial class FileRule
         {
             RegexPattern = match.Groups[1].Value;
             TargetPath = match.Groups[2].Value;
+            ParseTilda();
         }
     }
 
@@ -22,5 +23,23 @@ public partial class FileRule
     private static partial Regex RegexAndPathPattern();
 
     public override string ToString() => $"{RegexPattern} {TargetPath}";
+
+    private void ParseTilda()
+    {
+        if (!TargetPath.StartsWith("~"))
+        {
+            return;
+        }
+
+        char splitChar = TargetPath.Contains('/') ? '/' : '\\';
+        string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        if (TargetPath[1] != splitChar)
+        {
+            home = $"{home}{splitChar}";
+        }
+        TargetPath = TargetPath.Replace("~", home);
+
+
+    }
 
 }

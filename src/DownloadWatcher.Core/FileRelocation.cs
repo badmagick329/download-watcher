@@ -13,7 +13,15 @@ public class FileRelocation
 
     public string? NewName(string path)
     {
-        EnsureValidPath(path);
+        try
+        {
+            EnsureValidPath(path);
+
+        }
+        catch
+        {
+            return null;
+        }
         FileRule? fileRule = MatchingRule(path);
         if (fileRule == null)
         {

@@ -35,7 +35,6 @@ Arguments:
             Filter = "*.*",
         };
         RulesText rulesText = new(rulesFile);
-        Console.WriteLine(string.Join(Environment.NewLine, rulesText.Text));
         Application app = new(rulesText.Text);
         watcher.Created += (source, e) => OnCreate(source, e, app);
         watcher.Renamed += (source, e) => OnChange(source, e, app);

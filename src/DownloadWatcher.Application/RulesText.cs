@@ -5,6 +5,10 @@ public class RulesText
     public List<string> Text = [];
     public RulesText(string path)
     {
+        if (path == string.Empty)
+        {
+            path = "rules.txt";
+        }
         if (!Path.Exists(path))
         {
             throw new FileNotFoundException($"Rules file not found: {path}");

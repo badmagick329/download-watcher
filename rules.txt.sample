@@ -1,0 +1,13 @@
+# Move video files to this folder
+@"^.*\.(mp4|avi|webm|mkv)$" ~\Downloads\Videos
+
+# Images
+@"^.*\.(jpg|jpeg|png)$" ~Pictures
+
+# Downloaded Instagram Images. Earlier rules are overwritten by newer rules when there's multiple matches
+@"^Snapinsta\.app.+\.jpg$" ~Pictures\Instagram
+
+@"^WhatsApp Image.+\.jpg$" ~Pictures\Instagram
+
+# Docs
+@"^.*\.(docx|xlsx|pptx|pdf|csv|doc|rtf|txt)$" ~\Docs
