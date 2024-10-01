@@ -9,7 +9,7 @@ public class Application
         Relocation = new(rulesText);
     }
 
-    public void Process(string path)
+    public void Process(string path, bool instant = false)
     {
         string? newName = Relocation.NewName(path);
         if (newName == null)
@@ -19,7 +19,7 @@ public class Application
         try
         {
             FileInfo fileInfo = new(path);
-            if (IsFileStillDownloading(fileInfo))
+            if (!instant && IsFileStillDownloading(fileInfo))
             {
                 return;
             }

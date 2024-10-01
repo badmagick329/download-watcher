@@ -12,17 +12,37 @@ class Program
 Arguments:
   <Download Folder>  The path to the folder where downloads are stored. This argument is required.
   [Rules File]       (Optional) The path to the file containing the rules for file organization.
-                     If not provided, defaults to looking for rules.txt in the current path";
+                     If not provided, defaults to looking for rules.txt in the current path
+  --move-now         Scan the downloads directory and move files. Do not enter watch mode";
 
             Console.WriteLine(helpMessage);
             return;
         }
+
+        // TODO: Refactor?
         string rulesFile = string.Empty;
-        if (fullArgs.Length > 2)
+        const string moveNow = "--move-now";
+        if (fullArgs.Length > 2 && fullArgs[2] != moveNow)
         {
             rulesFile = fullArgs[2];
         }
-        Run(fullArgs[1], rulesFile);
+
+        if (fullArgs[^1] == moveNow || fullArgs[^2] == moveNow)
+        {
+            Console.WriteLine($"Checking {fullArgs[1]} and moving files");
+            RulesText rulesText = new(rulesFile);
+            Application app = new(rulesText.Text);
+            foreach (string file in Directory.GetFiles(fullArgs[1]))
+            {
+                app.Process(file, instant: true);
+            }
+        }
+        else
+        {
+            Run(fullArgs[1], rulesFile);
+
+        }
+
     }
 
 
