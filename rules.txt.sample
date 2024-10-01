@@ -1,3 +1,5 @@
+# Lines that don't match the regex + path pattern will be ignored
+
 # Move video files to this folder
 @"^.*\.(mp4|avi|webm|mkv)$" ~\Downloads\Videos
 
@@ -11,3 +13,6 @@
 
 # Docs
 @"^.*\.(docx|xlsx|pptx|pdf|csv|doc|rtf|txt)$" ~\Docs
+
+# Setup Files and Programs
+@"^.*\.(zip|exe|msi|)$" ~\Downloads\Setup Files
