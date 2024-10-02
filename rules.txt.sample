@@ -9,10 +9,10 @@
 # Downloaded Instagram Images. Earlier rules are overwritten by newer rules when there's multiple matches
 @"^Snapinsta\.app.+\.jpg$" ~Pictures\Instagram
 
-@"^WhatsApp Image.+\.jpg$" ~Pictures\Instagram
+@"^WhatsApp Image.+\.jpg$" ~Pictures\Whatsapp
 
 # Docs
 @"^.*\.(docx|xlsx|pptx|pdf|csv|doc|rtf|txt)$" ~\Docs
 
 # Setup Files and Programs
-@"^.*\.(zip|exe|msi|)$" ~\Downloads\Setup Files
+@"^.*\.(zip|exe|msi)$" ~\Downloads\Setup Files
