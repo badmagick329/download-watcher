@@ -34,7 +34,7 @@ Arguments:
             Application app = new(rulesText.Text);
             foreach (string file in Directory.GetFiles(fullArgs[1]))
             {
-                app.Process(file, instant: true);
+                app.ProcessChange(file, instant: true);
             }
         }
         else
@@ -67,12 +67,12 @@ Arguments:
     static void OnCreate(object source, FileSystemEventArgs e, Application app)
     {
         Console.WriteLine($"[{NowString()}] File: {e.FullPath} {e.ChangeType}");
-        app.Process(e.FullPath);
+        app.ProcessChange(e.FullPath);
     }
     static void OnChange(object source, FileSystemEventArgs e, Application app)
     {
         Console.WriteLine($"[{NowString()}] File: {e.FullPath} {e.ChangeType}");
-        app.Process(e.FullPath);
+        app.ProcessChange(e.FullPath);
     }
 
     static string NowString()

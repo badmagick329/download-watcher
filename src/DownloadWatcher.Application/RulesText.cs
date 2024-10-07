@@ -24,20 +24,14 @@ public class RulesText
     }
     public static List<string> ReadFile(string filename)
     {
-        StreamReader sr = new(filename);
         List<string> lines = [];
-        try
+        using (StreamReader sr = new(filename))
         {
-            string? line = sr.ReadLine();
-            while (line != null)
+            string? line;
+            while ((line = sr.ReadLine()) != null)
             {
                 lines.Add(line);
-                line = sr.ReadLine();
             }
-        }
-        finally
-        {
-            sr.Close();
         }
         return lines;
     }
