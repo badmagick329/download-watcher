@@ -25,6 +25,8 @@ public class Application
             }
 
             DirectoryInfo? parent = Directory.GetParent(newName);
+            newName = GetAvailableName(newName);
+
             if (parent != null && !Path.Exists(parent.FullName))
             {
                 Directory.CreateDirectory(parent.FullName);
@@ -32,14 +34,33 @@ public class Application
             Console.WriteLine($"[{NowString()}] Moving file to {newName}");
             File.Move(path, newName);
         }
-        catch (IOException)
+        catch (IOException e)
         {
-            File.Delete(path);
+            Console.WriteLine($"[{NowString()}] IO Error while moving file: {e.Message}");
         }
         catch (Exception e)
         {
             Console.WriteLine($"[{NowString()}] Error moving file: {e.Message}");
         }
+    }
+
+    private static string GetAvailableName(string newName)
+    {
+        string? directory = Path.GetDirectoryName(newName);
+        if (directory == null)
+        {
+            return newName;
+        }
+
+        string fileName = Path.GetFileNameWithoutExtension(newName);
+        string extension = Path.GetExtension(newName);
+        int count = 1;
+        while (Path.Exists(newName))
+        {
+            newName = Path.Combine(directory, $"{fileName} ({count}){extension}");
+            count++;
+        }
+        return newName;
     }
 
     static string NowString()
