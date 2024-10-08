@@ -23,10 +23,18 @@ public class MonitoredFile
     /// </remarks>
     public string TryMoveTo(string newName)
     {
-        if (FileInfo.Length == 0)
+        try
         {
-            return $"Ignoring empty file {FilePath}";
+            if (FileInfo.Length == 0)
+            {
+                return $"Ignoring empty file {FilePath}";
+            }
         }
+        catch (FileNotFoundException)
+        {
+            return $"{FilePath} missing or moved";
+        }
+
         DirectoryInfo? parent = Directory.GetParent(newName);
         newName = GetAvailableName(newName);
         if (parent != null && !Path.Exists(parent.FullName))
