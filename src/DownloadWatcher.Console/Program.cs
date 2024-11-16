@@ -9,6 +9,33 @@ class Program
     public static async Task<int> Main(string[] args)
     {
         return await Run(args);
+        // return await BgRunTesting();
+    }
+
+    private static async Task<int> BgRunTesting()
+    {
+        using var sr = new StreamReader(System.Console.OpenStandardInput());
+        using var cts = new CancellationTokenSource();
+        var cancelToken = cts.Token;
+        System.Console.WriteLine("Creating worker");
+        var worker = new Worker(cancelToken);
+        System.Console.WriteLine("Starting worker");
+        worker.Start();
+
+        System.Console.WriteLine("Type q to quit");
+        string? line = await sr.ReadLineAsync();
+        while (line != null && !line.Trim().Equals("q", StringComparison.CurrentCultureIgnoreCase))
+        {
+            worker.AddEvent(line);
+            line = await sr.ReadLineAsync();
+        }
+
+        System.Console.WriteLine("Cancelling Worker...");
+        await cts.CancelAsync();
+        await worker.Shutdown();
+
+        System.Console.WriteLine("Exiting application.");
+        return 0;
     }
 
     private static async Task<int> Run(string[] args)
