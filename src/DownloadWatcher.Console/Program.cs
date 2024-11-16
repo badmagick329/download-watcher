@@ -1,50 +1,50 @@
-﻿using DownloadWatcher.Application;
+﻿using System.Diagnostics;
+using DownloadWatcher.Application;
+using DownloadWatcher.Core;
+
+namespace DownloadWatcher.Console;
 
 class Program
 {
-    public static void Main(string[] args)
+    public static async Task<int> Main(string[] args)
     {
-        string[] fullArgs = Environment.GetCommandLineArgs();
-        if (fullArgs.Length < 2)
+        return await Run(args);
+    }
+
+    private static async Task<int> Run(string[] args)
+    {
+        CliConfig cliConfig = await CliConfig.FromArgs(args);
+        if (cliConfig.ValidationErrors.Count != 0)
         {
-            string helpMessage =
-                @$"Usage: {fullArgs[0]} <Download Folder> [Rules File]
+            foreach (string error in cliConfig.ValidationErrors)
+            {
+                System.Console.WriteLine(error);
+            }
 
-Arguments:
-  <Download Folder>  The path to the folder where downloads are stored. This argument is required.
-  [Rules File]       (Optional) The path to the file containing the rules for file organization.
-                     If not provided, defaults to looking for rules.txt in the current path
-  --move-now         Scan the downloads directory and move files. Do not enter watch mode";
-
-            Console.WriteLine(helpMessage);
-            return;
+            return -1;
         }
 
-        // TODO: Refactor?
-        string rulesFile = string.Empty;
-        const string moveNow = "--move-now";
-        if (fullArgs.Length > 2 && fullArgs[2] != moveNow)
-        {
-            rulesFile = fullArgs[2];
-        }
+        Debug.Assert(cliConfig.DownloadDirectory != null, "cliConfig.DownloadDirectory != null");
+        Debug.Assert(cliConfig.RulesFile != null, "cliConfig.RulesFile != null");
 
-        if (fullArgs[^1] == moveNow || fullArgs[^2] == moveNow)
+        if (cliConfig.MoveNow)
         {
-            Console.WriteLine($"Checking {fullArgs[1]} and moving files");
-            RulesText rulesText = new(rulesFile);
-            Application app = new(rulesText.Text);
-            foreach (string file in Directory.GetFiles(fullArgs[1]))
+            Log.WriteLine($"Checking {cliConfig.DownloadDirectory.Name} and moving files");
+            RulesText rulesText = new(cliConfig.RulesFile.Name);
+            Application.Application app = new(rulesText.Text);
+            foreach (string file in Directory.GetFiles(cliConfig.DownloadDirectory.Name))
             {
                 app.ProcessChange(file, instant: true);
             }
+
+            return 0;
         }
-        else
-        {
-            Run(fullArgs[1], rulesFile);
-        }
+
+        StartWatcherAndBlock(cliConfig.DownloadDirectory.Name, cliConfig.RulesFile.Name);
+        return 0;
     }
 
-    public static void Run(string downloadDir, string rulesFile)
+    private static void StartWatcherAndBlock(string downloadDir, string rulesFile)
     {
         FileSystemWatcher watcher =
             new()
@@ -54,23 +54,23 @@ Arguments:
                 Filter = "*.*",
             };
         RulesText rulesText = new(rulesFile);
-        Application app = new(rulesText.Text);
+        Application.Application app = new(rulesText.Text);
         watcher.Created += (source, e) => OnCreate(source, e, app);
         watcher.Renamed += (source, e) => OnChange(source, e, app);
         watcher.EnableRaisingEvents = true;
-        Console.WriteLine("Press q to quit");
+        System.Console.WriteLine("Press q to quit");
         Log.WriteLine($"Watching {downloadDir}");
-        while (Console.Read() != 'q')
+        while (System.Console.Read() != 'q')
             ;
     }
 
-    static void OnCreate(object source, FileSystemEventArgs e, Application app)
+    static void OnCreate(object source, FileSystemEventArgs e, Application.Application app)
     {
         Log.WriteLine($"File: {e.FullPath} {e.ChangeType}");
         app.ProcessChange(e.FullPath);
     }
 
-    static void OnChange(object source, FileSystemEventArgs e, Application app)
+    static void OnChange(object source, FileSystemEventArgs e, Application.Application app)
     {
         Log.WriteLine($"File: {e.FullPath} {e.ChangeType}");
         app.ProcessChange(e.FullPath);
