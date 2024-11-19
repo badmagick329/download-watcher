@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using DownloadWatcher.Application;
 using DownloadWatcher.Core;
 
@@ -9,34 +10,75 @@ class Program
     public static async Task<int> Main(string[] args)
     {
         return await Run(args);
-        // return await BgRunTesting();
+        // return await BgRunTesting(args);
     }
 
-    private static async Task<int> BgRunTesting()
+    private static async Task<int> BgRunTesting(string[] args)
     {
+        CliConfig cliConfig = await CliConfig.FromArgs(args);
+        if (cliConfig.ValidationErrors.Count != 0)
+        {
+            foreach (string error in cliConfig.ValidationErrors)
+            {
+                System.Console.WriteLine(error);
+            }
+
+            return -1;
+        }
+
+        Debug.Assert(cliConfig.DownloadDirectory != null, "cliConfig.DownloadDirectory != null");
+        Debug.Assert(cliConfig.RulesFile != null, "cliConfig.RulesFile != null");
+
+        System.Console.WriteLine(
+            $"Watching {cliConfig.DownloadDirectory.Name} with rules file {cliConfig.RulesFile.Name}"
+        );
+        FileSystemWatcher watcher =
+            new()
+            {
+                Path = cliConfig.DownloadDirectory.Name,
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
+                Filter = "*.*",
+                EnableRaisingEvents = true,
+            };
+        RulesText rulesText = new(cliConfig.RulesFile.Name);
+        Application.Application app = new(rulesText.Text);
+
         using var sr = new StreamReader(System.Console.OpenStandardInput());
         using var cts = new CancellationTokenSource();
         var cancelToken = cts.Token;
         var worker = new Worker(cancelToken);
         worker.Start();
 
-        System.Console.WriteLine("Type q to quit");
-        string? line = await sr.ReadLineAsync();
-        while (line != null && !line.Trim().Equals("q", StringComparison.CurrentCultureIgnoreCase))
+        watcher.Created += (source, e) =>
         {
+            System.Console.WriteLine($"Created {e.FullPath}");
             var task = async () =>
             {
-                System.Console.WriteLine($"Task: {line}");
-                Worker.ReportThread("Main method");
-                await Task.Delay(10);
+                app.ProcessChange(e.FullPath);
             };
-            ScheduledTask scheduledTask = new(
-                task,
-                DateTime.Now.AddSeconds(3),
-                0,
-                TimeSpan.FromSeconds(1)
-            );
+            ScheduledTask scheduledTask =
+                new(task, DateTime.Now.AddSeconds(3), 0, TimeSpan.FromSeconds(2));
             worker.AddTask(scheduledTask);
+            System.Console.WriteLine($"Added task for {e.FullPath}");
+        };
+
+        watcher.Renamed += (source, e) =>
+        {
+            System.Console.WriteLine($"Created {e.FullPath}");
+            var task = async () =>
+            {
+                app.ProcessChange(e.FullPath);
+            };
+            ScheduledTask scheduledTask =
+                new(task, DateTime.Now.AddSeconds(3), 0, TimeSpan.FromSeconds(2));
+            worker.AddTask(scheduledTask);
+            System.Console.WriteLine($"Added task for {e.FullPath}");
+        };
+
+        System.Console.WriteLine("Type q to quit");
+        string? line = string.Empty;
+        while (line != null && !line.Trim().Equals("q", StringComparison.CurrentCultureIgnoreCase))
+        {
             System.Console.WriteLine($"main thread: {Environment.CurrentManagedThreadId}");
             line = await sr.ReadLineAsync();
         }
