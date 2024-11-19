@@ -17,16 +17,27 @@ class Program
         using var sr = new StreamReader(System.Console.OpenStandardInput());
         using var cts = new CancellationTokenSource();
         var cancelToken = cts.Token;
-        System.Console.WriteLine("Creating worker");
         var worker = new Worker(cancelToken);
-        System.Console.WriteLine("Starting worker");
         worker.Start();
 
         System.Console.WriteLine("Type q to quit");
         string? line = await sr.ReadLineAsync();
         while (line != null && !line.Trim().Equals("q", StringComparison.CurrentCultureIgnoreCase))
         {
-            worker.AddEvent(line);
+            var task = async () =>
+            {
+                System.Console.WriteLine($"Task: {line}");
+                Worker.ReportThread("Main method");
+                await Task.Delay(10);
+            };
+            ScheduledTask scheduledTask = new(
+                task,
+                DateTime.Now.AddSeconds(3),
+                0,
+                TimeSpan.FromSeconds(1)
+            );
+            worker.AddTask(scheduledTask);
+            System.Console.WriteLine($"main thread: {Environment.CurrentManagedThreadId}");
             line = await sr.ReadLineAsync();
         }
 
