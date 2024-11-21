@@ -17,6 +17,9 @@ public class App
     {
         using var cts = new CancellationTokenSource();
         FilesWatcher watcher = new(DownloadDirectoryName, cts);
+        watcher.AddScheduledTaskHandler(
+            async (string path) => await ProcessFileChangeEventAsync(path)
+        );
         watcher.MonitorFileChanges(_moveDelay);
 
         using var sr = new StreamReader(Console.OpenStandardInput());

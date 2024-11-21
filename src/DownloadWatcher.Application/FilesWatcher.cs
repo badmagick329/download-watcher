@@ -6,7 +6,7 @@ class FilesWatcher
 {
     private readonly FileSystemWatcher _watcher;
     private readonly CancellationTokenSource _cts;
-    private Func<Task>? ScheduledTaskHandler { get; set; }
+    private Func<string, Task>? ScheduledTaskHandler { get; set; }
     private Worker? Worker { get; set; }
     private const int _retryDelay = 2;
 
@@ -22,7 +22,7 @@ class FilesWatcher
         _cts = cts;
     }
 
-    public void AddScheduledTaskHandler(Func<Task> handler)
+    public void AddScheduledTaskHandler(Func<string, Task> handler)
     {
         ScheduledTaskHandler = handler;
     }
@@ -38,7 +38,7 @@ class FilesWatcher
         {
             ScheduledTask scheduledTask =
                 new(
-                    async () => await ScheduledTaskHandler!(),
+                    async () => await ScheduledTaskHandler(e.FullPath),
                     DateTime.Now.AddSeconds(moveDelay),
                     0,
                     TimeSpan.FromSeconds(_retryDelay)
