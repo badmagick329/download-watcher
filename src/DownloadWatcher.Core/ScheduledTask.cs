@@ -7,7 +7,12 @@ public class ScheduledTask
     public int RetryCount { get; set; }
     public TimeSpan RetryInterval { get; set; }
 
-    public ScheduledTask(Func<Task> taskAction, DateTime scheduledTime, int retryCount, TimeSpan retryInterval)
+    public ScheduledTask(
+        Func<Task> taskAction,
+        DateTime scheduledTime,
+        int retryCount,
+        TimeSpan retryInterval
+    )
     {
         TaskAction = taskAction;
         ScheduledTime = scheduledTime;

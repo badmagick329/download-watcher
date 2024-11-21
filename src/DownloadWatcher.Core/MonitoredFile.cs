@@ -2,6 +2,8 @@ public class MonitoredFile
 {
     public string FilePath { get; }
     public FileInfo FileInfo { get; }
+    private const int Delay = 1500;
+
     public MonitoredFile(string path)
     {
         FilePath = path;
@@ -58,11 +60,18 @@ public class MonitoredFile
         }
     }
 
-
     public bool IsFileStillDownloading()
     {
         long initialSize = FileInfo.Length;
-        Thread.Sleep(1500);
+        Thread.Sleep(Delay);
+        FileInfo.Refresh();
+        return FileInfo.Length != initialSize;
+    }
+
+    public async Task<bool> IsFileStillDownloadingAsync()
+    {
+        long initialSize = FileInfo.Length;
+        await Task.Delay(Delay);
         FileInfo.Refresh();
         return FileInfo.Length != initialSize;
     }
@@ -90,5 +99,4 @@ public class MonitoredFile
         }
         return newName;
     }
-
 }

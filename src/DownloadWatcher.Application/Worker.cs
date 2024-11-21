@@ -3,14 +3,13 @@ using DownloadWatcher.Core;
 
 namespace DownloadWatcher.Application;
 
-public class Worker
+class Worker
 {
     private readonly CancellationToken _cancelToken;
     private readonly PriorityQueue<ScheduledTask, DateTime> _taskQueue = new();
     private readonly SemaphoreSlim _queueSignal = new(0);
     private Task? _currentTask;
     private bool _isShuttingDown;
-
 
     public Worker(CancellationToken cancelToken)
     {
@@ -29,6 +28,7 @@ public class Worker
         lock (_taskQueue)
         {
             _taskQueue.Enqueue(scheduledTask, scheduledTask.ScheduledTime);
+            ReportTaskQueue();
         }
 
         _queueSignal.Release();
@@ -52,7 +52,6 @@ public class Worker
         }
     }
 
-
     private async Task Work()
     {
         ReportThread("Worker loop method");
@@ -71,6 +70,7 @@ public class Worker
                         if (nextScheduledTime <= DateTime.UtcNow)
                         {
                             nextTask = _taskQueue.Dequeue();
+                            ReportTaskQueue();
                         }
                         else
                         {
@@ -102,6 +102,7 @@ public class Worker
                             lock (_taskQueue)
                             {
                                 _taskQueue.Enqueue(nextTask, nextTask.ScheduledTime);
+                                ReportTaskQueue();
                             }
 
                             _queueSignal.Release();
@@ -129,7 +130,7 @@ public class Worker
         }
         finally
         {
-            ReportThread("Worker exit");
+            ReportThread("Worker finally");
         }
 
         ReportThread("After worker exit");
@@ -138,5 +139,10 @@ public class Worker
     public static void ReportThread(string source)
     {
         Console.WriteLine($"{source} running in thread: {Environment.CurrentManagedThreadId}");
+    }
+
+    private void ReportTaskQueue()
+    {
+        Console.WriteLine($"Task queue count: {_taskQueue.Count}");
     }
 }

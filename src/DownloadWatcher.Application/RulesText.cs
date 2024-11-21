@@ -1,8 +1,9 @@
 namespace DownloadWatcher.Application;
 
-public class RulesText
+class RulesText
 {
-    public List<string> Text = [];
+    public List<string> Lines = [];
+
     public RulesText(string path)
     {
         if (path == string.Empty)
@@ -15,13 +16,14 @@ public class RulesText
         }
         try
         {
-            Text = ReadFile(path);
+            Lines = ReadFile(path);
         }
         catch (Exception e)
         {
             throw new Exception($"Error reading rules file: {e.Message}");
         }
     }
+
     public static List<string> ReadFile(string filename)
     {
         List<string> lines = [];
@@ -35,5 +37,4 @@ public class RulesText
         }
         return lines;
     }
-
 }
