@@ -1,3 +1,6 @@
+using DownloadWatcher.Core;
+using Serilog;
+
 namespace DownloadWatcher.Application;
 
 public class App
@@ -30,14 +33,14 @@ public class App
             line = await sr.ReadLineAsync();
         }
 
-        Console.WriteLine("Shutting down...");
+        Log.Debug("Shutting down...");
         await watcher.Shutdown();
         return 0;
     }
 
     public async Task<int> RunOnce()
     {
-        Log.WriteLine($"Checking {DownloadDirectoryName} and moving files");
+        Console.WriteLine($"Checking {DownloadDirectoryName} and moving files");
         foreach (string file in Directory.GetFiles(DownloadDirectoryName))
         {
             await ProcessFileChangeEventAsync(file, instant: true);
@@ -56,7 +59,7 @@ public class App
         MonitoredFile monitoredFile = new(path);
         if (!instant && (await monitoredFile.IsFileStillDownloadingAsync()))
         {
-            Log.WriteLine($"File is still downloading: {path}");
+            Log.Debug($"File is still downloading: {path}");
             await ProcessFileChangeEventAsync(path, instant);
             return;
         }
@@ -64,7 +67,7 @@ public class App
         string message = monitoredFile.TryMoveTo(newName);
         if (message != "")
         {
-            Log.WriteLine(message);
+            Log.Information(message);
         }
     }
 }

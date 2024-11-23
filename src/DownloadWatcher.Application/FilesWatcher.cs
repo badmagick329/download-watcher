@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using DownloadWatcher.Application;
 using DownloadWatcher.Core;
+using Serilog;
 
 class FilesWatcher
 {
@@ -44,7 +45,7 @@ class FilesWatcher
                     TimeSpan.FromSeconds(_retryDelay)
                 );
             Worker.AddTask(scheduledTask);
-            Log.WriteLine($"{e.FullPath} - {e.ChangeType}. Processing in {moveDelay} seconds");
+            Log.Debug($"{e.FullPath} - {e.ChangeType}. Processing in {moveDelay} seconds");
         }
 
         _watcher.Created += eventHandler;

@@ -9,6 +9,7 @@ public class CliConfig
     public required RulesFile RulesFile { get; init; }
     public bool MoveNow { get; private init; }
     public int MoveDelay { get; private init; }
+    public bool EnableDebug { get; private init; }
 
     private CliConfig() { }
 
@@ -16,7 +17,7 @@ public class CliConfig
     {
         var directoryOption = new Option<DirectoryInfo?>(
             ["--directory", "-d"],
-            "The path to the downloads directory"
+            "Directory to monitor for downloads."
         )
         {
             IsRequired = true,
@@ -24,57 +25,68 @@ public class CliConfig
         var rulesFileOption = new Option<FileInfo?>(
             ["--rules-file", "-r"],
             () => new FileInfo("rules.txt"),
-            "The path to the file containing the rules for file organization. Defaults to rules.txt in the current directory"
+            "File containing rules for moving downloads."
         );
         var moveNowOption = new Option<bool>(
             ["--move-now", "-m"],
-            "Run once to scan downloads directory and move files. Skip watch mode. Defaults to false"
+            "Move existing files immediately."
         );
 
         var moveDelayOption = new Option<int>(
             ["--move-delay", "-md"],
             () => 0,
-            "The delay in seconds before moving a file after it has been downloaded. Defaults to 0"
+            "Delay in seconds before moving files."
         );
 
-        var rootCommand = new RootCommand(
-            "Monitor a specified download directory for changes and move files based on predefined rules in a text file"
-        )
+        var debugOption = new Option<bool>("--debug", () => false, "Enable debug logging.");
+
+        var rootCommand = new RootCommand(HelpDescription())
         {
             directoryOption,
             rulesFileOption,
             moveNowOption,
             moveDelayOption,
+            debugOption,
         };
 
         DirectoryInfo? downloadDirectoryInfo = null;
         FileInfo? rulesFileInfo = null;
         bool moveNowValue = false;
         int moveDelayValue = 0;
+        bool enableDebugValue = false;
 
         rootCommand.SetHandler(
-            (directory, rulesFile, moveNow, moveDelay) =>
+            (directory, rulesFile, moveNow, moveDelay, enableDebug) =>
             {
                 downloadDirectoryInfo = directory;
                 rulesFileInfo = rulesFile;
                 moveNowValue = moveNow;
                 moveDelayValue = moveDelay;
+                enableDebugValue = enableDebug;
             },
             directoryOption,
             rulesFileOption,
             moveNowOption,
-            moveDelayOption
+            moveDelayOption,
+            debugOption
         );
         await rootCommand.InvokeAsync(args);
 
-        return AsResult(downloadDirectoryInfo, rulesFileInfo, moveNowValue, moveDelayValue);
+        return AsResult(
+            downloadDirectoryInfo,
+            rulesFileInfo,
+            moveNowValue,
+            moveDelayValue,
+            enableDebugValue
+        );
     }
 
     private static Result<CliConfig> AsResult(
         DirectoryInfo? downloadDirectoryInfo,
         FileInfo? rulesFileInfo,
         bool moveNowValue,
-        int moveDelayValue
+        int moveDelayValue,
+        bool enableDebug
     )
     {
         var downloadDirectoryResult = DownloadDirectory.Create(downloadDirectoryInfo);
@@ -96,6 +108,7 @@ public class CliConfig
                 RulesFile = rulesFileResult.Value,
                 MoveNow = moveNowValue,
                 MoveDelay = moveDelayValue,
+                EnableDebug = enableDebug,
             };
         return Result<CliConfig>.Success(cliConfig);
     }
@@ -104,6 +117,32 @@ public class CliConfig
     {
         return $"Download Directory: {DownloadDirectory?.Info?.FullName}\n"
             + $"Rules File: {RulesFile?.Info?.FullName}\n"
-            + $"Move Now: {MoveNow}";
+            + $"Move Now: {MoveNow}\n"
+            + $"Move Delay: {MoveDelay}\n"
+            + $"Enable Debug: {EnableDebug}";
+    }
+
+    private static string HelpDescription()
+    {
+        var sep = '\\';
+        var downloadDir = "C:\\Users\\username\\Downloads";
+        if (!OperatingSystem.IsWindows())
+        {
+            sep = '/';
+            downloadDir = "/home/username/Downloads";
+        }
+        return $@"Watch a directory for downloads and move files based on rules.
+
+Monitor downloads directory with default rules file:
+.{sep}watcher -d {downloadDir}
+
+Move existing files immediately:
+.{sep}watcher -d {downloadDir} -r .{sep}rules.txt --move-now
+
+Add 10 minute delay before moving files:
+.{sep}watcher -d {downloadDir} --move-delay 600
+
+Enable debug logging:
+.{sep}watcher -d {downloadDir} --debug";
     }
 }

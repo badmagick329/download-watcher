@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
 
+namespace DownloadWatcher.Core;
+
 public class FileRelocation
 {
     public List<FileRule> FileRules { get; set; } = [];

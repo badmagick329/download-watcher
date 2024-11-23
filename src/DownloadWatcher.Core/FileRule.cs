@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
 
+namespace DownloadWatcher.Core;
+
 public partial class FileRule
 {
     public string RegexPattern { get; set; } = string.Empty;
@@ -27,7 +29,7 @@ public partial class FileRule
 
     private void ParseTilda()
     {
-        if (!TargetPath.StartsWith("~"))
+        if (!TargetPath.StartsWith('~'))
         {
             return;
         }

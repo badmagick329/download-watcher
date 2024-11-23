@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using DownloadWatcher.Core;
+using Serilog;
 
 namespace DownloadWatcher.Application;
 
@@ -20,8 +21,7 @@ class Worker
     {
         if (_isShuttingDown)
         {
-            Console.WriteLine("Worker is shutting down. Task will not be added.");
-            ReportThread("Add task");
+            Log.Debug("Worker is shutting down. Task will not be added.");
             return;
         }
 
@@ -36,25 +36,24 @@ class Worker
 
     public void Start()
     {
-        Console.WriteLine("Starting Worker...");
+        Log.Debug("Starting Worker...");
         Task.Run(Work);
-        ReportThread("Worker start method");
-        Console.WriteLine("Worker started.");
+        Log.Debug("Worker started.");
     }
 
     public async Task Shutdown()
     {
-        Console.WriteLine("Shutdown initiated. No more events will be added.");
+        Log.Debug("Shutdown initiated. No more events will be added.");
         _isShuttingDown = true;
         if (_currentTask is not null)
         {
+            Log.Information("Waiting for current task to complete.");
             await _currentTask;
         }
     }
 
     private async Task Work()
     {
-        ReportThread("Worker loop method");
         try
         {
             while (!_cancelToken.IsCancellationRequested)
@@ -83,18 +82,16 @@ class Worker
                 {
                     try
                     {
-                        Console.WriteLine($"Executing task at {DateTime.UtcNow}");
-                        ReportThread("Task execution");
+                        Log.Debug($"Executing task at {DateTime.UtcNow}");
                         Debug.Assert(_currentTask == null, "_currentTask == null");
                         _currentTask = nextTask.TaskAction();
                         await _currentTask;
-                        Console.WriteLine("Task completed.");
+                        Log.Debug("Task completed.");
                         _currentTask = null;
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine($"Task failed: {e.Message}");
-                        ReportThread("Task failure");
+                        Log.Debug($"Task failed: {e.Message}");
                         if (nextTask.RetryCount > 0)
                         {
                             nextTask.RetryCount--;
@@ -106,11 +103,11 @@ class Worker
                             }
 
                             _queueSignal.Release();
-                            Console.WriteLine($"Task rescheduled for {nextTask.ScheduledTime}");
+                            Log.Debug($"Task rescheduled for {nextTask.ScheduledTime}");
                         }
                         else
                         {
-                            Console.WriteLine("Task retries exhausted.");
+                            Log.Debug($"Task retries exhausted.");
                         }
                     }
                 }
@@ -124,25 +121,15 @@ class Worker
                 }
             }
         }
-        catch (OperationCanceledException)
-        {
-            ReportThread("Worker cancelled");
-        }
-        finally
-        {
-            ReportThread("Worker finally");
-        }
-
-        ReportThread("After worker exit");
-    }
-
-    public static void ReportThread(string source)
-    {
-        Console.WriteLine($"{source} running in thread: {Environment.CurrentManagedThreadId}");
+        catch (OperationCanceledException) { }
     }
 
     private void ReportTaskQueue()
     {
-        Console.WriteLine($"Task queue count: {_taskQueue.Count}");
+        Log.Debug($"Task queue count: {_taskQueue.Count}");
+        if (_taskQueue.Count > 1000)
+        {
+            Log.Warning("Task queue count is over 1000");
+        }
     }
 }

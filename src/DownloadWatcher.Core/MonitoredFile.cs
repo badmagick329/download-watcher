@@ -1,3 +1,7 @@
+using Serilog;
+
+namespace DownloadWatcher.Core;
+
 public class MonitoredFile
 {
     public string FilePath { get; }
@@ -43,7 +47,9 @@ public class MonitoredFile
         {
             Directory.CreateDirectory(parent.FullName);
         }
-        Log.WriteLine($"Moving file to {newName}");
+        Log.Information(
+            $"{Ansii.RedText(FilePath)} {Ansii.YellowText("->")} {Ansii.GreenText(newName)}"
+        );
 
         try
         {
