@@ -35,40 +35,12 @@ public class App
         return 0;
     }
 
-    public int Run()
-    {
-        FileSystemWatcher watcher =
-            new()
-            {
-                Path = DownloadDirectoryName,
-                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
-                Filter = "*.*",
-                EnableRaisingEvents = true,
-            };
-
-        watcher.Created += (source, e) =>
-        {
-            Log.WriteLine($"File: {e.FullPath} {e.ChangeType}");
-            ProcessFileChangeEvent(e.FullPath);
-        };
-        watcher.Renamed += (source, e) =>
-        {
-            Log.WriteLine($"File: {e.FullPath} {e.ChangeType}");
-            ProcessFileChangeEvent(e.FullPath);
-        };
-        Console.WriteLine("Press q to quit");
-        Log.WriteLine($"Watching {DownloadDirectoryName}");
-        while (Console.Read() != 'q')
-            ;
-        return 0;
-    }
-
-    public int RunOnce()
+    public async Task<int> RunOnce()
     {
         Log.WriteLine($"Checking {DownloadDirectoryName} and moving files");
         foreach (string file in Directory.GetFiles(DownloadDirectoryName))
         {
-            ProcessFileChangeEvent(file, instant: true);
+            await ProcessFileChangeEventAsync(file, instant: true);
         }
         return 0;
     }
@@ -86,29 +58,6 @@ public class App
         {
             Log.WriteLine($"File is still downloading: {path}");
             await ProcessFileChangeEventAsync(path, instant);
-            return;
-        }
-
-        string message = monitoredFile.TryMoveTo(newName);
-        if (message != "")
-        {
-            Log.WriteLine(message);
-        }
-    }
-
-    public void ProcessFileChangeEvent(string path, bool instant = false)
-    {
-        string? newName = Relocation.NewName(path);
-        if (newName == null)
-        {
-            return;
-        }
-
-        MonitoredFile monitoredFile = new(path);
-        if (!instant && monitoredFile.IsFileStillDownloading())
-        {
-            Log.WriteLine($"File is still downloading: {path}");
-            ProcessFileChangeEvent(path, instant);
             return;
         }
 

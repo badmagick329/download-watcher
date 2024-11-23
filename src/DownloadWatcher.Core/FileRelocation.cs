@@ -3,12 +3,10 @@ using System.Text.RegularExpressions;
 public class FileRelocation
 {
     public List<FileRule> FileRules { get; set; } = [];
+
     public FileRelocation(List<string> rulesLines)
     {
-        FileRules = rulesLines
-            .Select(line => new FileRule(line))
-            .Where(fr => !fr.IsEmpty)
-            .ToList();
+        FileRules = rulesLines.Select(line => new FileRule(line)).Where(fr => !fr.IsEmpty).ToList();
     }
 
     public string? NewName(string path)
@@ -16,7 +14,6 @@ public class FileRelocation
         try
         {
             EnsureValidPath(path);
-
         }
         catch
         {
@@ -42,13 +39,11 @@ public class FileRelocation
         {
             throw new ArgumentException("The specified path is a directory.");
         }
-
     }
 
     internal FileRule? MatchingRule(string path)
     {
         string filename = Path.GetFileName(path);
-        return FileRules
-            .LastOrDefault(rule => Regex.IsMatch(filename, rule.RegexPattern));
+        return FileRules.LastOrDefault(rule => Regex.IsMatch(filename, rule.RegexPattern));
     }
 }

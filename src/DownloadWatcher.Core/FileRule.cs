@@ -8,6 +8,7 @@ public partial class FileRule
     {
         get => TargetPath == string.Empty || RegexPattern == string.Empty;
     }
+
     public FileRule(string ruleText)
     {
         Match match = RegexAndPathPattern().Match(ruleText);
@@ -38,8 +39,5 @@ public partial class FileRule
             home = $"{home}{splitChar}";
         }
         TargetPath = TargetPath.Replace("~", home);
-
-
     }
-
 }

@@ -27,7 +27,7 @@ public class Result<T>
     {
         if (value == null)
         {
-            throw new ArgumentNullException($"{nameof(value)} cannot be null");
+            throw new ArgumentNullException(nameof(value));
         }
 
         return new(value);
